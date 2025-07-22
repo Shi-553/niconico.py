@@ -32,6 +32,8 @@ if TYPE_CHECKING:
         UserVideosSortOrder,
     )
 
+from niconico.objects.nvapi import MylistData, NvAPIResponse
+from niconico.objects.video import Mylist
 
 class UserClient(BaseClient):
     """A class that represents a user client."""
@@ -267,6 +269,33 @@ class UserClient(BaseClient):
             res_cls = NvAPIResponse[OwnVideosData](**res.json())
             if res_cls.data is not None:
                 return res_cls.data
+        return None
+    
+    @login_required()
+    def get_own_mylist(
+        self,
+        mylist_id: str,
+        *,
+        page_size: int = 20,
+        page: int = 1,
+    ) -> Mylist | None:
+        """Get a own mylist by its ID.
+
+        Args:
+            mylist_id (str): The ID of the mylist.
+            page_size (int): The number of videos to get per page.
+            page (int): The page number.
+
+        Returns:
+            Mylist | None: The mylist object if found, None otherwise.
+        """
+        query = {"pageSize": str(page_size), "page": str(page)}
+        query_str = "&".join([f"{key}={value}" for key, value in query.items()])
+        res = self.niconico.get(f"https://nvapi.nicovideo.jp/v1/users/me/mylists/{mylist_id}?{query_str}")
+        if res.status_code == requests.codes.ok:
+            res_cls = NvAPIResponse[MylistData](**res.json())
+            if res_cls.data is not None:
+                return res_cls.data.mylist
         return None
 
     @login_required()
