@@ -16,6 +16,7 @@ from niconico.objects.nvapi import (
     OwnVideosData,
     RecommendData,
     RelationshipUsersData,
+    SeriesData,
     UserData,
     UserMylistsData,
     UserSeriesData,
@@ -319,16 +320,36 @@ class UserClient(BaseClient):
         return []
 
     @login_required()
-    def get_own_series(self, *, page_size: int = 100, page: int = 1) -> list[UserSeriesItem]:
-        """Get the series of a user by its ID.
+    def get_own_series(self, series_id: str, *, page_size: int = 100, page: int = 1) -> SeriesData | None:
+        """Get a own series by its ID.
 
         Args:
-            user_id (str): The ID of the user.
+            series_id (str): The ID of the series.
+            page_size (int): The number of videos to get per page.
+            page (int): The page number.
+
+        Returns:
+            SeriesData | None: The series object if found, None otherwise.
+        """
+        query = {"pageSize": str(page_size), "page": str(page)}
+        query_str = "&".join([f"{key}={value}" for key, value in query.items()])
+        res = self.niconico.get(f"https://nvapi.nicovideo.jp/v1/users/me/series/{series_id}?{query_str}")
+        if res.status_code == requests.codes.ok:
+            res_cls = NvAPIResponse[SeriesData](**res.json())
+            if res_cls.data is not None:
+                return res_cls.data
+        return None
+
+    @login_required()
+    def get_own_series_list(self, *, page_size: int = 100, page: int = 1) -> list[UserSeriesItem]:
+        """Get the series list of the own user.
+
+        Args:
             page_size (int): The number of series to get per page.
             page (int): The page number to get the series from.
 
         Returns:
-            list[UserSeriesData] | None: The list of series if found, None otherwise.
+            list[UserSeriesItem]: The list of series if found, an empty list otherwise.
         """
         query = {"pageSize": str(page_size), "page": str(page)}
         query_str = "&".join([f"{key}={value}" for key, value in query.items()])
