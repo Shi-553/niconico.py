@@ -276,3 +276,37 @@ class ThreadKeyData(BaseModel):
     """
 
     thread_key: str = Field(..., alias="threadKey")
+
+
+class RecommendRecipe(BaseModel):
+    """A class that represents a recipe of a recommend response from the NvAPI."""
+
+    id_: str = Field(..., alias="id")
+    meta: None
+
+
+class RecommendReason(BaseModel):
+    """A class that represents a reason of a recommend item response from the NvAPI."""
+
+    tag: str
+
+
+class RecommendItem(BaseModel):
+    """A class that represents an item of a recommend response from the NvAPI."""
+
+    id_: str = Field(..., alias="id")
+    content_type: str = Field(..., alias="contentType")
+    recommend_type: str = Field(..., alias="recommendType")
+    content: EssentialVideo
+    reason: RecommendReason | None = None
+
+
+class RecommendData(BaseModel):
+    """A class that represents the data of a recommend response from the NvAPI.
+
+    ref: https://nvapi.nicovideo.jp/v1/recommend
+    """
+
+    recipe: RecommendRecipe
+    recommend_id: str = Field(..., alias="recommendId")
+    items: list[RecommendItem]
