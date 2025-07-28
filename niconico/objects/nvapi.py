@@ -236,6 +236,16 @@ class UserMylistsData(BaseModel):
     mylists: list[UserMylistItem]
 
 
+class CreateMylistData(BaseModel):
+    """A class that represents the data of a create mylist response from the NvAPI.
+
+    ref: https://nvapi.nicovideo.jp/v1/users/me/mylists
+    """
+
+    mylist_id: int = Field(..., alias="mylistId")
+    mylist: Mylist
+
+
 class UserSeriesData(BaseModel):
     """A class that represents the data of a series response from the NvAPI.
 

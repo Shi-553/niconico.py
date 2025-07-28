@@ -9,6 +9,7 @@ import requests
 from niconico.base.client import BaseClient
 from niconico.decorators import login_required
 from niconico.objects.nvapi import (
+    CreateMylistData,
     FeedData,
     MylistData,
     NvAPIResponse,
@@ -36,7 +37,7 @@ if TYPE_CHECKING:
         UserVideosSortKey,
         UserVideosSortOrder,
     )
-    from niconico.objects.video import Mylist
+    from niconico.objects.video import Mylist, MylistSortKey, MylistSortOrder
 
 class UserClient(BaseClient):
     """A class that represents a user client."""
@@ -348,6 +349,42 @@ class UserClient(BaseClient):
         item_ids_str = ",".join(item_ids)
         res = self.niconico.delete(f"https://nvapi.nicovideo.jp/v1/users/me/mylists/{mylist_id}/items?itemIds={item_ids_str}")
         return res.status_code == requests.codes.ok
+
+    @login_required()
+    def create_mylist(
+        self,
+        name: str,
+        description: str = "",
+        *,
+        is_public: bool = False,
+        default_sort_key: MylistSortKey = "addedAt",
+        default_sort_order: MylistSortOrder = "desc",
+    ) -> CreateMylistData | None:
+        """Create a new mylist.
+
+        Args:
+            name (str): The name of the mylist.
+            description (str): The description of the mylist.
+            is_public (bool): Whether the mylist is public.
+            default_sort_key (MylistSortKey): The default sort key for the mylist.
+            default_sort_order (MylistSortOrder): The default sort order for the mylist.
+
+        Returns:
+            CreateMylistData | None: The created mylist data if successful, None otherwise.
+        """
+        data = {
+            "name": name,
+            "description": description,
+            "isPublic": "true" if is_public else "false",
+            "defaultSortKey": default_sort_key,
+            "defaultSortOrder": default_sort_order,
+        }
+        res = self.niconico.post("https://nvapi.nicovideo.jp/v1/users/me/mylists", data=data)
+        if res.status_code == requests.codes.ok:
+            res_cls = NvAPIResponse[CreateMylistData](**res.json())
+            if res_cls.data is not None:
+                return res_cls.data
+        return None
 
     @login_required()
     def get_own_series(self, series_id: str, *, page_size: int = 100, page: int = 1) -> SeriesData | None:
