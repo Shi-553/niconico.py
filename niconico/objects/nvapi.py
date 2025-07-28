@@ -310,3 +310,12 @@ class RecommendData(BaseModel):
     recipe: RecommendRecipe
     recommend_id: str = Field(..., alias="recommendId")
     items: list[RecommendItem]
+
+
+class LikeData(BaseModel):
+    """A class that represents the data of a like response from the NvAPI.
+
+    ref: https://nvapi.nicovideo.jp/v1/users/me/likes/items?videoId=<video_id>
+    """
+
+    thanks_message: str | None = Field(None, alias="thanksMessage")
