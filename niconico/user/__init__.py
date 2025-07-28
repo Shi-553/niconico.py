@@ -239,6 +239,32 @@ class UserClient(BaseClient):
         return None
 
     @login_required()
+    def follow_user(self, user_id: str) -> bool:
+        """Follow a user.
+
+        Args:
+            user_id (str): The ID of the user to follow.
+
+        Returns:
+            bool: True if the user was successfully followed, False otherwise.
+        """
+        res = self.niconico.post(f"https://user-follow-api.nicovideo.jp/v1/user/followees/niconico-users/{user_id}.json")
+        return res.status_code == requests.codes.ok
+
+    @login_required()
+    def unfollow_user(self, user_id: str) -> bool:
+        """Unfollow a user.
+
+        Args:
+            user_id (str): The ID of the user to unfollow.
+
+        Returns:
+            bool: True if the user was successfully unfollowed, False otherwise.
+        """
+        res = self.niconico.delete(f"https://user-follow-api.nicovideo.jp/v1/user/followees/niconico-users/{user_id}.json")
+        return res.status_code == requests.codes.ok
+
+    @login_required()
     def get_own_videos(
         self,
         *,
