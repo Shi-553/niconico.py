@@ -321,6 +321,35 @@ class UserClient(BaseClient):
         return []
 
     @login_required()
+    def add_mylist_item(self, mylist_id: str, item_id: str) -> bool:
+        """Add a video to a mylist.
+
+        Args:
+            mylist_id (str): The ID of the mylist to add the video to.
+            item_id (str): The ID of the video to add to the mylist.
+
+        Returns:
+            bool: True if the video was successfully added, False otherwise.
+        """
+        res = self.niconico.post(f"https://nvapi.nicovideo.jp/v1/users/me/mylists/{mylist_id}/items?itemId={item_id}")
+        return res.status_code == requests.codes.created
+
+    @login_required()
+    def remove_mylist_items(self, mylist_id: str, item_ids: list[str]) -> bool:
+        """Remove multiple videos from a mylist.
+
+        Args:
+            mylist_id (str): The ID of the mylist to remove the videos from.
+            item_ids (list[str]): The IDs of the videos to remove from the mylist.
+
+        Returns:
+            bool: True if the videos were successfully removed, False otherwise.
+        """
+        item_ids_str = ",".join(item_ids)
+        res = self.niconico.delete(f"https://nvapi.nicovideo.jp/v1/users/me/mylists/{mylist_id}/items?itemIds={item_ids_str}")
+        return res.status_code == requests.codes.ok
+
+    @login_required()
     def get_own_series(self, series_id: str, *, page_size: int = 100, page: int = 1) -> SeriesData | None:
         """Get a own series by its ID.
 
