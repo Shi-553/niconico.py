@@ -9,6 +9,7 @@ import requests
 from niconico.base.client import BaseClient
 from niconico.decorators import login_required
 from niconico.objects.nvapi import (
+    FeedData,
     MylistData,
     NvAPIResponse,
     OwnSeriesData,
@@ -404,5 +405,27 @@ class UserClient(BaseClient):
             res_cls = NvAPIResponse[RecommendData](**res.json())
             if res_cls.data is not None:
                 return res_cls.data
+        return None
+
+    @login_required()
+    def get_following_activities(
+        self, *, context: str = "header_timeline", cursor: str | None = None,
+    ) -> FeedData | None:
+        """Get activities from users you follow.
+
+        Args:
+            context (str): The context for the feed. Defaults to "header_timeline".
+            cursor (str | None): The cursor for pagination. If None, gets the latest activities.
+
+        Returns:
+            FeedData | None: The feed data if successful, None otherwise.
+        """
+        query = {"context": context}
+        if cursor is not None:
+            query["cursor"] = cursor
+        query_str = "&".join([f"{key}={value}" for key, value in query.items()])
+        res = self.niconico.get(f"https://api.feed.nicovideo.jp/v1/activities/followings/publish?{query_str}")
+        if res.status_code == requests.codes.ok:
+            return FeedData(**res.json())
         return None
 

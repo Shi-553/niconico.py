@@ -319,3 +319,69 @@ class LikeData(BaseModel):
     """
 
     thanks_message: str | None = Field(None, alias="thanksMessage")
+
+
+class ActivityActor(BaseModel):
+    """A class that represents an actor in a feed activity."""
+
+    id_: str = Field(..., alias="id")
+    type_: str = Field(..., alias="type")
+    name: str
+    icon_url: str = Field(..., alias="iconUrl")
+    url: str
+    is_live: bool = Field(..., alias="isLive")
+
+
+class ActivityMessage(BaseModel):
+    """A class that represents a message in a feed activity."""
+
+    text: str
+
+
+class ActivityLabel(BaseModel):
+    """A class that represents a label in a feed activity."""
+
+    text: str
+
+
+class ActivityVideoContent(BaseModel):
+    """A class that represents video content in a feed activity."""
+
+    duration: int
+
+
+class ActivityContent(BaseModel):
+    """A class that represents content in a feed activity."""
+
+    type_: str = Field(..., alias="type")
+    id_: str = Field(..., alias="id")
+    title: str
+    url: str
+    started_at: str = Field(..., alias="startedAt")
+    video: ActivityVideoContent | None = None
+
+
+class Activity(BaseModel):
+    """A class that represents a feed activity."""
+
+    sensitive: bool
+    message: ActivityMessage
+    thumbnail_url: str = Field(..., alias="thumbnailUrl")
+    label: ActivityLabel
+    content: ActivityContent
+    id_: str = Field(..., alias="id")
+    kind: str
+    created_at: str = Field(..., alias="createdAt")
+    actor: ActivityActor
+
+
+class FeedData(BaseModel):
+    """A class that represents the data of a feed response from the Feed API.
+
+    ref: https://api.feed.nicovideo.jp/v1/activities/followings/publish?context=header_timeline
+    """
+
+    activities: list[Activity]
+    code: str
+    impression_id: str = Field(..., alias="impressionId")
+    next_cursor: str | None = Field(None, alias="nextCursor")
