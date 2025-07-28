@@ -236,6 +236,16 @@ class UserMylistsData(BaseModel):
     mylists: list[UserMylistItem]
 
 
+class FollowingMylistsData(BaseModel):
+    """A class that represents the data of following mylists response from the NvAPI.
+
+    ref: https://nvapi.nicovideo.jp/v1/users/me/following/mylists
+    """
+
+    follow_limit: int = Field(..., alias="followLimit")
+    mylists: list[UserMylistItem]
+
+
 class CreateMylistData(BaseModel):
     """A class that represents the data of a create mylist response from the NvAPI.
 

@@ -11,6 +11,7 @@ from niconico.decorators import login_required
 from niconico.objects.nvapi import (
     CreateMylistData,
     FeedData,
+    FollowingMylistsData,
     MylistData,
     NvAPIResponse,
     OwnSeriesData,
@@ -427,6 +428,25 @@ class UserClient(BaseClient):
                 return res_cls.data.items
         return []
 
+    @login_required()
+    def get_own_following_mylists(self, *, sample_item_count: int = 0) -> FollowingMylistsData | None:
+        """Get the mylists that the own user is following.
+
+        Args:
+            sample_item_count (int): The number of items to get from each mylist.
+
+        Returns:
+            FollowingMylistsData | None: The following mylists data if found, None otherwise.
+        """
+        query = {"sampleItemCount": str(sample_item_count)}
+        query_str = "&".join([f"{key}={value}" for key, value in query.items()])
+        res = self.niconico.get(f"https://nvapi.nicovideo.jp/v1/users/me/following/mylists?{query_str}")
+        if res.status_code == requests.codes.ok:
+            res_cls = NvAPIResponse[FollowingMylistsData](**res.json())
+            if res_cls.data is not None:
+                return res_cls.data
+        return None
+
     def get_recommendations(
         self,
         recipe_id: str = Literal["video_watch_recommendation" , "video_top_recommend"],
@@ -475,22 +495,33 @@ class UserClient(BaseClient):
 
     @login_required()
     def get_following_activities(
-        self, *, context: str = "header_timeline", cursor: str | None = None,
+        self,
+        *,
+        endpoint: Literal["publish", "video"] = "publish",
+        context: Literal["header_timeline", "my_timeline"] = "header_timeline",
+        cursor: str | None = None,
     ) -> FeedData | None:
         """Get activities from users you follow.
 
         Args:
-            context (str): The context for the feed. Defaults to "header_timeline".
+            endpoint (Literal["publish", "video"]): The API endpoint to use.
+                - "publish": All types of activities (video, illust, etc.)
+                - "video": Video activities only
+            context (str): The context for the feed. Currently not affecting results.
             cursor (str | None): The cursor for pagination. If None, gets the latest activities.
 
         Returns:
             FeedData | None: The feed data if successful, None otherwise.
         """
+        base_url = "https://api.feed.nicovideo.jp/v1/activities/followings"
+        url = f"{base_url}/{endpoint}"
+
         query = {"context": context}
         if cursor is not None:
             query["cursor"] = cursor
         query_str = "&".join([f"{key}={value}" for key, value in query.items()])
-        res = self.niconico.get(f"https://api.feed.nicovideo.jp/v1/activities/followings/publish?{query_str}")
+
+        res = self.niconico.get(f"{url}?{query_str}")
         if res.status_code == requests.codes.ok:
             return FeedData(**res.json())
         return None
