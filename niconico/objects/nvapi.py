@@ -236,6 +236,15 @@ class UserMylistsData(BaseModel):
     mylists: list[UserMylistItem]
 
 
+class FollowingMylistItem(BaseModel):
+    """A class that represents a following mylist item."""
+
+    id_: int = Field(..., alias="id")
+    status: str
+    detail: UserMylistItem
+    is_following: bool = Field(..., alias="isFollowing")
+
+
 class FollowingMylistsData(BaseModel):
     """A class that represents the data of following mylists response from the NvAPI.
 
@@ -243,8 +252,7 @@ class FollowingMylistsData(BaseModel):
     """
 
     follow_limit: int = Field(..., alias="followLimit")
-    mylists: list[UserMylistItem]
-
+    mylists: list[FollowingMylistItem]
 
 class CreateMylistData(BaseModel):
     """A class that represents the data of a create mylist response from the NvAPI.
