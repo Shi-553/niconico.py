@@ -242,7 +242,6 @@ class FollowingMylistItem(BaseModel):
     id_: int = Field(..., alias="id")
     status: str
     detail: UserMylistItem
-    is_following: bool = Field(..., alias="isFollowing")
 
 
 class FollowingMylistsData(BaseModel):
