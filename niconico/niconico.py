@@ -178,6 +178,7 @@ class NicoNico:
         res = self.session.get("https://www.nicovideo.jp/")
 
         if res.url != "https://www.nicovideo.jp/":
+            self.session.cookies.clear("", "/", "user_session")
             raise LoginFailureError(message="Login failed")
 
         if res.headers.get("x-niconico-authflag") == "1":
@@ -185,6 +186,7 @@ class NicoNico:
         elif res.headers.get("x-niconico-authflag") == "3":
             self.premium = True
         else:
+            self.session.cookies.clear("", "/", "user_session")
             raise LoginFailureError(message="Login failed")
 
         self.logined = True
