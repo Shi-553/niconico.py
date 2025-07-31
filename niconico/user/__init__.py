@@ -475,7 +475,7 @@ class UserClient(BaseClient):
 
     def get_recommendations(
         self,
-        recipe_id: str = Literal["video_watch_recommendation" , "video_top_recommend"],
+        recipe_id: str = Literal["video_watch_recommendation", "video_recommendation_recommend" , "video_top_recommend"],
         *,
         video_id: str | None = None,
         site: str = "nicovideo",
