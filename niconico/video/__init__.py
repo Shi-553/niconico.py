@@ -57,25 +57,6 @@ class VideoClient(BaseClient):
                 return res_cls.data.items[0].video
         return None
 
-    def get_videos(self, video_ids: list[str]) -> list[EssentialVideo]:
-        """Get multiple videos by their IDs.
-
-        Args:
-            video_ids (list[str]): The list of video IDs.
-
-        Returns:
-            list[EssentialVideo]: The list of video objects. Videos that are not found will be omitted from the result.
-        """
-        if not video_ids:
-            return []
-        watch_ids = ",".join(video_ids)
-        res = self.niconico.get(f"https://nvapi.nicovideo.jp/v1/videos?watchIds={watch_ids}")
-        if res.status_code == requests.codes.ok:
-            res_cls = NvAPIResponse[VideosData](**res.json())
-            if res_cls.data is not None:
-                return [item.video for item in res_cls.data.items]
-        return []
-
     def get_video_tags(self, video_id: str) -> list[Tag] | None:
         """Get the tags of a video by its ID.
 
