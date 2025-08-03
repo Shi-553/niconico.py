@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, Field
 
@@ -297,7 +297,7 @@ class RecommendItem(BaseModel):
     id_: str = Field(..., alias="id")
     content_type: str = Field(..., alias="contentType")
     recommend_type: str = Field(..., alias="recommendType")
-    content: EssentialVideo
+    content: EssentialVideo | Any
     reason: RecommendReason | None = None
 
 
