@@ -342,6 +342,8 @@ class VideoSearchClient(BaseClient):
     ) -> SnapshotSearchResponse | None:
         """Search videos using Snapshot Search API v2.
 
+        https://site.nicovideo.jp/search-api-docs/snapshot
+
         Args:
             q (str): Search keyword.
             targets (list[SnapshotTargetField]): Target fields for search
