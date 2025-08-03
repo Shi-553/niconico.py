@@ -12,6 +12,7 @@ from niconico.objects.nvapi import (
     CreateMylistData,
     FeedData,
     FollowingMylistsData,
+    FollowingTagsData,
     MylistData,
     NvAPIResponse,
     OwnSeriesData,
@@ -469,6 +470,20 @@ class UserClient(BaseClient):
         res = self.niconico.get(f"https://nvapi.nicovideo.jp/v1/users/me/following/mylists?{query_str}")
         if res.status_code == requests.codes.ok:
             res_cls = NvAPIResponse[FollowingMylistsData](**res.json())
+            if res_cls.data is not None:
+                return res_cls.data
+        return None
+
+    @login_required()
+    def get_own_following_tags(self) -> FollowingTagsData | None:
+        """Get the tags that the own user is following.
+
+        Returns:
+            FollowingTagsData | None: The following tags data if found, None otherwise.
+        """
+        res = self.niconico.get("https://nvapi.nicovideo.jp/v1/users/me/following/tags")
+        if res.status_code == requests.codes.ok:
+            res_cls = NvAPIResponse[FollowingTagsData](**res.json())
             if res_cls.data is not None:
                 return res_cls.data
         return None

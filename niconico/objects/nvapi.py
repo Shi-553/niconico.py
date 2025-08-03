@@ -253,6 +253,23 @@ class FollowingMylistsData(BaseModel):
     follow_limit: int = Field(..., alias="followLimit")
     mylists: list[FollowingMylistItem]
 
+
+class FollowingTagItem(BaseModel):
+    """A class that represents a following tag item."""
+
+    name: str
+    followed_at: str = Field(..., alias="followedAt")
+    niconic_summary: str | None = Field(None, alias="nicodicSummary")
+
+
+class FollowingTagsData(BaseModel):
+    """A class that represents the data of following tags response from the NvAPI.
+
+    ref: https://nvapi.nicovideo.jp/v1/users/me/following/tags
+    """
+
+    tags: list[FollowingTagItem]
+
 class CreateMylistData(BaseModel):
     """A class that represents the data of a create mylist response from the NvAPI.
 
