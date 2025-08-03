@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+import json
+from typing import TYPE_CHECKING, Any, Literal
 
 import requests
 
 from niconico.base.client import BaseClient
 from niconico.objects.nvapi import FacetData, ListSearchData, NvAPIResponse, VideoSearchData
+from niconico.objects.video.search import SnapshotSearchResponse
 
 if TYPE_CHECKING:
     from niconico.objects.video.search import (
@@ -300,4 +302,87 @@ class VideoSearchClient(BaseClient):
             res_cls = NvAPIResponse[ListSearchData](**res.json())
             if res_cls.data is not None:
                 return res_cls.data
+        return None
+
+    def _build_filter_params(self, filters: dict[str, dict[str, Any] | list[Any]]) -> list[str]:
+        """Build filter parameters for snapshot search.
+
+        Args:
+            filters: Filter conditions dictionary.
+
+        Returns:
+            List of filter parameter strings.
+        """
+        filter_params = []
+        for field, conditions in filters.items():
+            if isinstance(conditions, dict):
+                for operator, value in conditions.items():
+                    filter_params.append(f"filters[{field}][{operator}]={value}")
+            elif isinstance(conditions, list):
+                for i, value in enumerate(conditions):
+                    filter_params.append(f"filters[{field}][{i}]={value}")
+        return filter_params
+
+    def search_videos_snapshot(
+        self,
+        q: str,
+        *,
+        targets: list[str] | None = None,
+        fields: list[str] | None = None,
+        filters: dict[str, dict[str, Any] | list[Any]] | None = None,
+        json_filter: dict[str, Any] | None = None,
+        _sort: str | None = None,
+        _offset: int = 0,
+        _limit: int = 10,
+        _context: str = "niconico.py",
+    ) -> SnapshotSearchResponse | None:
+        """Search videos using Snapshot Search API v2.
+
+        Args:
+            q (str): Search keyword.
+            targets (list[str] | None): Target fields for search (e.g., ["title", "description", "tags"]).
+            fields (list[str] | None): Fields to include in response.
+            filters (dict | None): Filter conditions.
+            json_filter (dict | None): Complex filter conditions using JSON format.
+            _sort (str | None): Sort order (e.g., "-viewCounter").
+            _offset (int): Offset for pagination.
+            _limit (int): Maximum number of results.
+            _context (str): Service or application name.
+
+        Returns:
+            SnapshotSearchResponse | None: The search result.
+        """
+        query = {"q": q, "_offset": str(_offset), "_limit": str(_limit), "_context": _context}
+
+        if targets is not None:
+            query["targets"] = ",".join(targets)
+
+        if fields is not None:
+            query["fields"] = ",".join(fields)
+
+        if _sort is not None:
+            query["_sort"] = _sort
+
+        # Handle filters parameter
+        filter_params = []
+        if filters is not None:
+            filter_params = self._build_filter_params(filters)
+
+        # Handle json_filter parameter
+        if json_filter is not None:
+            query["jsonFilter"] = json.dumps(json_filter, ensure_ascii=False)
+
+        # Build query string
+        query_str = "&".join([f"{key}={value}" for key, value in query.items()])
+        if filter_params:
+            query_str += "&" + "&".join(filter_params)
+
+        # Make request with User-Agent header
+        headers = {"User-Agent": f"{_context} (niconico.py)"}
+        url = f"https://snapshot.search.nicovideo.jp/api/v2/snapshot/video/contents/search?{query_str}"
+
+        res = requests.get(url, headers=headers, timeout=30)
+        if res.status_code == requests.codes.ok:
+            response_data = res.json()
+            return SnapshotSearchResponse(**response_data)
         return None
