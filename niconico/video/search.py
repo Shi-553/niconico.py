@@ -16,6 +16,9 @@ if TYPE_CHECKING:
         FacetItem,
         ListSearchSortKey,
         ListType,
+        SnapshotResponseField,
+        SnapshotSortKey,
+        SnapshotTargetField,
         VideoSearchSortKey,
         VideoSearchSortOrder,
     )
@@ -326,12 +329,13 @@ class VideoSearchClient(BaseClient):
     def search_videos_snapshot(
         self,
         q: str,
+        targets: list[SnapshotTargetField],
+        _sort: SnapshotSortKey,
         *,
-        targets: list[str] | None = None,
-        fields: list[str] | None = None,
+        fields: list[SnapshotResponseField] | None = None,
         filters: dict[str, dict[str, Any] | list[Any]] | None = None,
         json_filter: dict[str, Any] | None = None,
-        _sort: str | None = None,
+        _sort_order: VideoSearchSortOrder = "desc",
         _offset: int = 0,
         _limit: int = 10,
         _context: str = "niconico.py",
@@ -340,11 +344,13 @@ class VideoSearchClient(BaseClient):
 
         Args:
             q (str): Search keyword.
-            targets (list[str] | None): Target fields for search (e.g., ["title", "description", "tags"]).
-            fields (list[str] | None): Fields to include in response.
+            targets (list[SnapshotTargetField]): Target fields for search
+                (e.g., ["title", "description", "tags"]).
+            _sort (SnapshotSortKey): Sort key (e.g., "viewCounter").
+            fields (list[SnapshotResponseField] | None): Fields to include in response.
             filters (dict | None): Filter conditions.
             json_filter (dict | None): Complex filter conditions using JSON format.
-            _sort (str | None): Sort order (e.g., "-viewCounter").
+            _sort_order (VideoSearchSortOrder): Sort order ("desc", "asc", "none").
             _offset (int): Offset for pagination.
             _limit (int): Maximum number of results.
             _context (str): Service or application name.
@@ -354,14 +360,17 @@ class VideoSearchClient(BaseClient):
         """
         query = {"q": q, "_offset": str(_offset), "_limit": str(_limit), "_context": _context}
 
-        if targets is not None:
-            query["targets"] = ",".join(targets)
+        query["targets"] = ",".join(targets)
 
         if fields is not None:
             query["fields"] = ",".join(fields)
 
-        if _sort is not None:
+        # Combine sort key and order
+        sort_prefix = "" if _sort_order == "asc" else "-"
+        if _sort_order == "none":
             query["_sort"] = _sort
+        else:
+            query["_sort"] = f"{sort_prefix}{_sort}"
 
         # Handle filters parameter
         filter_params = []

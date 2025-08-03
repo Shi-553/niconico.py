@@ -23,6 +23,37 @@ VideoSearchSortKey = Literal[
 
 VideoSearchSortOrder = Literal["desc", "asc", "none"]
 
+# Snapshot Search API specific types
+SnapshotTargetField = Literal["title", "description", "tags", "tagsExact"]
+SnapshotResponseField = Literal[
+    "contentId",
+    "title",
+    "description",
+    "userId",
+    "channelId",
+    "viewCounter",
+    "mylistCounter",
+    "likeCounter",
+    "lengthSeconds",
+    "thumbnailUrl",
+    "startTime",
+    "lastResBody",
+    "commentCounter",
+    "lastCommentTime",
+    "categoryTags",
+    "tags",
+    "genre",
+]
+SnapshotSortKey = Literal[
+    "viewCounter",
+    "mylistCounter",
+    "likeCounter",
+    "lengthSeconds",
+    "startTime",
+    "commentCounter",
+    "lastCommentTime",
+]
+
 
 class RelatedTag(BaseModel):
     """A class that represents a related tag."""
