@@ -297,6 +297,8 @@ class RecommendItem(BaseModel):
     id_: str = Field(..., alias="id")
     content_type: str = Field(..., alias="contentType")
     recommend_type: str = Field(..., alias="recommendType")
+    # Currently only EssentialVideo is confirmed.
+    # We use Any to allow for future variations in format.
     content: EssentialVideo | Any
     reason: RecommendReason | None = None
 
