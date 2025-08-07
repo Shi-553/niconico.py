@@ -168,3 +168,18 @@ class NicoNico:
             str: The user session.
         """
         return self.session.cookies.get("user_session")
+
+    def logout(self) -> None:
+        """Logout from NicoNico.
+        
+        Properly logs out by calling logout endpoint and clearing session data.
+        Updates authentication state to reflect logged out status.
+        """
+        if self.logined:
+            self.session.get("https://account.nicovideo.jp/logout")
+            self.session.cookies.clear("", "/", "user_session")
+            self.logined = False
+            self.premium = False
+            self.logger.debug("Logged out from NicoNico")
+        else:
+            self.logger.warning("Not logged in, cannot logout")
