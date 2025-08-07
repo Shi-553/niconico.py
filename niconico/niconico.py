@@ -171,7 +171,7 @@ class NicoNico:
 
     def logout(self) -> None:
         """Logout from NicoNico.
-        
+
         Properly logs out by calling logout endpoint and clearing session data.
         Updates authentication state to reflect logged out status.
         """
