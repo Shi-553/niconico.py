@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from logging import Logger, getLogger
+from urllib.parse import urlparse
 
 import requests
 
@@ -44,10 +45,12 @@ class NicoNico:
         Returns:
             requests.Response: The response object.
         """
+        parsed_url = urlparse(url)
         headers = {
             "User-Agent": "niconico.py",
             "X-Frontend-Id": "6",
             "X-Frontend-Version": "0",
+            "Host": parsed_url.netloc,
         }
         return self.session.get(url, headers=headers)
 
@@ -70,6 +73,7 @@ class NicoNico:
         Returns:
             requests.Response: The response object.
         """
+        parsed_url = urlparse(url)
         req_headers = {
             "User-Agent": "niconico.py",
             "X-Frontend-Id": "6",
@@ -78,6 +82,7 @@ class NicoNico:
             "X-Client-Os-Type": "others",
             "X-Request-With": "https://www.nicovideo.jp",
             "Referer": "https://www.nicovideo.jp/",
+            "Host": parsed_url.netloc,
         }
         if headers is not None:
             req_headers.update(headers)
