@@ -74,6 +74,14 @@ class WatchChannel(BaseModel):
     viewer: WatchChannelViewer
 
 
+class WatchOwnerChannel(BaseModel):
+    """Data model of a watch owner channel."""
+
+    id_: str = Field(..., alias="id")
+    name: str
+    url: str
+
+
 class WatchClient(BaseModel):
     """Data model of the client of the watch API response."""
 
@@ -276,7 +284,7 @@ class WatchOwner(BaseModel):
     id_: int = Field(..., alias="id")
     nickname: str
     icon_url: str = Field(..., alias="iconUrl")
-    channel: None
+    channel: WatchOwnerChannel | None
     live: None
     is_videos_public: bool = Field(..., alias="isVideosPublic")
     is_mylists_public: bool = Field(..., alias="isMylistsPublic")
