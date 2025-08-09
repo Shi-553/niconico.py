@@ -278,6 +278,19 @@ class WatchOwnerViewer(BaseModel):
     is_following: bool = Field(..., alias="isFollowing")
 
 
+class WatchOwnerLive(BaseModel):
+    """Data model of a live stream of a watch owner."""
+
+    id_: str = Field(..., alias="id")
+    title: str
+    url: str
+    begun_at: str = Field(..., alias="begunAt")
+    is_video_live: bool = Field(..., alias="isVideoLive")
+    video_live_on_air_start_time: str | None = Field(..., alias="videoLiveOnAirStartTime")
+    thumbnail_url: str = Field(..., alias="thumbnailUrl")
+    flip_thumbnail_url: str | None = Field(..., alias="flipThumbnailUrl")
+
+
 class WatchOwner(BaseModel):
     """Data model of a watch owner."""
 
@@ -285,7 +298,7 @@ class WatchOwner(BaseModel):
     nickname: str
     icon_url: str = Field(..., alias="iconUrl")
     channel: WatchOwnerChannel | None
-    live: None
+    live: WatchOwnerLive | None
     is_videos_public: bool = Field(..., alias="isVideosPublic")
     is_mylists_public: bool = Field(..., alias="isMylistsPublic")
     video_live_notice: None = Field(..., alias="videoLiveNotice")
