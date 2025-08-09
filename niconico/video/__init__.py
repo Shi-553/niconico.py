@@ -54,6 +54,7 @@ class VideoClient(BaseClient):
         Args:
             video_id (str): The ID of the video.
             edit_key (str): The edit key for tag operations (required for v2 API).
+                            Can be obtained from WatchData.tag.edit.edit_key or WatchData.tag.viewer.edit_key.
 
         Returns:
             list[Tag] | None: The tags of the video if found, None otherwise.
