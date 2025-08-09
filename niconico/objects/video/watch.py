@@ -518,7 +518,7 @@ class WatchData(BaseModel):
     marquee: Any
     media: WatchMedia
     ok_reason: str = Field(..., alias="okReason")
-    owner: WatchOwner
+    owner: WatchOwner | None
     payment: WatchPayment
     pc_watch_page: Any = Field(..., alias="pcWatchPage")
     player: WatchPlayer
