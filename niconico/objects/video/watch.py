@@ -343,7 +343,7 @@ class PlayerInitialPlayback(BaseModel):
     """Data model of the initial playback of a player."""
 
     type_: str = Field(..., alias="type")
-    position_sec: float = Field(..., alias="positionSec")
+    position_sec: float | None = Field(None, alias="positionSec")
 
 
 class WatchPlayerComment(BaseModel):
