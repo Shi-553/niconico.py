@@ -276,6 +276,7 @@ class VideoSearchClient(BaseClient):
         keyword: str,
         sort_key: ListSearchSortKey = "_hotTotalScore",
         types: list[ListType] | None = None,
+        sort_order: VideoSearchSortOrder = "desc",
         page_size: int = 100,
         page: int = 1,
     ) -> ListSearchData | None:
@@ -284,6 +285,7 @@ class VideoSearchClient(BaseClient):
         Args:
             keyword (str): The keyword to search.
             sort_key (ListSearchSortKey): The sort key.
+            sort_order (VideoSearchSortOrder): The sort order.
             types (list[ListType]): The types. If None, all types are included.
             page_size (int): The page size.
             page (int): The page.
@@ -294,11 +296,12 @@ class VideoSearchClient(BaseClient):
         query = {
             "keyword": keyword,
             "sortKey": sort_key,
+            "sortOrder": sort_order,
             "pageSize": str(page_size),
             "page": str(page),
         }
         if types is not None and len(types) == 1:
-            query["types"] = types[0]
+            query["type"] = types[0]
         query_str = "&".join([f"{key}={value}" for key, value in query.items()])
         res = self.niconico.get(f"https://nvapi.nicovideo.jp/v1/search/list?{query_str}")
         if res.status_code == requests.codes.ok:
