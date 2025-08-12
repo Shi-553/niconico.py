@@ -270,8 +270,8 @@ class VideoSearchClient(BaseClient):
         self,
         keyword: str,
         sort_key: ListSearchSortKey = "_hotTotalScore",
-        types: list[ListType] | None = None,
         sort_order: VideoSearchSortOrder = "desc",
+        types: list[ListType] | None = None,
         page_size: int = 100,
         page: int = 1,
     ) -> ListSearchData | None:
