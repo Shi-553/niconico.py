@@ -180,7 +180,7 @@ class UserMylistItem(BaseModel):
     owner: Owner
     follower_count: int = Field(..., alias="followerCount")
     created_at: str = Field(..., alias="createdAt")
-    is_following: bool | None = Field(None, alias="isFollowing")
+    is_following: bool = Field(..., alias="isFollowing")
 
 
 class UserSeriesOwner(BaseModel):
