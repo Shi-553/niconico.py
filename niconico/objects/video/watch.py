@@ -411,6 +411,16 @@ class WatchSystem(BaseModel):
     is_stella_alive: bool = Field(..., alias="isStellaAlive")
 
 
+class WatchTagItem(BaseModel):
+    """Data model of a tag item."""
+
+    name: str
+    is_category: bool = Field(..., alias="isCategory")
+    is_category_candidate: bool = Field(..., alias="isCategoryCandidate")
+    is_nicodic_article_exists: bool = Field(..., alias="isNicodicArticleExists")
+    is_locked: bool = Field(..., alias="isLocked")
+
+
 class WatchTagEdit(BaseModel):
     """Data model of an edit of a watch tag."""
 
@@ -422,7 +432,7 @@ class WatchTagEdit(BaseModel):
 class WatchTag(BaseModel):
     """Data model of a tag of the watch API response."""
 
-    items: list
+    items: list[WatchTagItem]
     has_r18_tag: bool = Field(..., alias="hasR18Tag")
     is_published_nicoscript: bool = Field(..., alias="isPublishedNicoscript")
     edit: WatchTagEdit
