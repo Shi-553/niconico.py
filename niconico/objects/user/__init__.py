@@ -20,7 +20,7 @@ class UserRelationships(BaseModel):
     """A class that represents the relationships of a user."""
 
     session_user: SessionRelationships = Field(..., alias="sessionUser")
-    is_me: bool = Field(0, alias="isMe")
+    is_me: bool = Field(default=False, alias="isMe")
 
 
 class UserLevel(BaseModel):
