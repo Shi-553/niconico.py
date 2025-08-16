@@ -9,7 +9,6 @@ import requests
 from niconico.base.client import BaseClient
 from niconico.decorators import login_required
 from niconico.objects.nvapi import (
-    MylistData,
     NvAPIResponse,
     OwnSeriesData,
     OwnUserData,
@@ -29,6 +28,7 @@ if TYPE_CHECKING:
     from niconico.objects.user import (
         NicoUser,
         OwnNicoUser,
+        RecipeId,
         UserMylistItem,
         UserSeriesItem,
         UserVideosSortKey,
@@ -314,7 +314,7 @@ class UserClient(BaseClient):
 
     def get_recommendations(
         self,
-        recipe_id: str = Literal["video_watch_recommendation", "video_recommendation_recommend" , "video_top_recommend"],
+        recipe_id: RecipeId,
         *,
         video_id: str | None = None,
         site: str = "nicovideo",
@@ -326,7 +326,10 @@ class UserClient(BaseClient):
         """Get recommendations based on a specific video or general recommendations.
 
         Args:
-            recipe_id (str): The ID of the recommendation recipe.
+            recipe_id (str): The ID of the recommendation recipe. Available options:
+                - "video_watch_recommendation": Watch-based recommendations (requires video_id)
+                - "video_recommendation_recommend": General video recommendations
+                - "video_top_recommend": Top recommended videos
             video_id (str | None): The ID of the video to base the recommendations on.
             site (str): The site to get recommendations from. Defaults to "nicovideo".
             limit (int | None): The maximum number of recommendations to return.
