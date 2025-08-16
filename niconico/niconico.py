@@ -36,23 +36,26 @@ class NicoNico:
         self.user = UserClient(self)
         self.channel = ChannelClient(self)
 
-    def get(self, url: str) -> requests.Response:
+    def get(self, url: str, *, headers: dict[str, str] | None = None) -> requests.Response:
         """Send a GET request to a URL.
 
         Args:
             url (str): The URL to send the request to.
+            headers (dict[str, str] | None): Additional headers to send with the request.
 
         Returns:
             requests.Response: The response object.
         """
         parsed_url = urlparse(url)
-        headers = {
+        req_headers = {
             "User-Agent": "niconico.py",
             "X-Frontend-Id": "6",
             "X-Frontend-Version": "0",
             "Host": parsed_url.netloc,
         }
-        return self.session.get(url, headers=headers)
+        if headers is not None:
+            req_headers.update(headers)
+        return self.session.get(url, headers=req_headers)
 
     def post(
         self,
