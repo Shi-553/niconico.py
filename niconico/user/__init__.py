@@ -413,7 +413,7 @@ class UserClient(BaseClient):
         return None
 
     @login_required()
-    def get_own_series(self, series_id: str, *, page_size: int = 100, page: int = 1) -> SeriesData | None:
+    def get_own_series_detail(self, series_id: str, *, page_size: int = 100, page: int = 1) -> SeriesData | None:
         """Get a own series by its ID.
 
         Args:
@@ -434,7 +434,7 @@ class UserClient(BaseClient):
         return None
 
     @login_required()
-    def get_own_series_list(self, *, page_size: int = 100, page: int = 1) -> list[UserSeriesItem]:
+    def get_own_series(self, *, page_size: int = 100, page: int = 1) -> list[UserSeriesItem]:
         """Get the series list of the own user.
 
         Args:
