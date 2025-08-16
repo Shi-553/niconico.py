@@ -178,6 +178,7 @@ class UserMylistItem(BaseModel):
     default_sort_order: MylistSortOrder = Field(..., alias="defaultSortOrder")
     items_count: int = Field(..., alias="itemsCount")
     owner: Owner
+    sample_items: list[MylistItem] = Field(..., alias="sampleItems")
     follower_count: int = Field(..., alias="followerCount")
     created_at: str = Field(..., alias="createdAt")
     is_following: bool = Field(..., alias="isFollowing")
