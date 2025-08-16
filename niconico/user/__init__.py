@@ -312,6 +312,7 @@ class UserClient(BaseClient):
                 return res_cls.data.items
         return []
 
+    @login_required()
     def get_recommendations(
         self,
         recipe_id: RecipeId,
