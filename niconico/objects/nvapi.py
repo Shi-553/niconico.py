@@ -332,7 +332,7 @@ class RecommendRecipe(BaseModel):
 class RecommendReason(BaseModel):
     """A class that represents a reason of a recommend item response from the NvAPI."""
 
-    tag: str
+    tag: str | None = None
 
 
 class RecommendItem(BaseModel):
