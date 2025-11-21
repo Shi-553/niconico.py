@@ -1,12 +1,12 @@
 [tool.poetry]
-name = "niconico.py"
-version = "2.1.0"
-description = "API wrapper for NicoNico services"
-authors = ["Negima1072 <ngm1072@gmail.com>"]
+name = "niconico.py-ma"
+version = "2.1.0-ma.1"
+description = "API wrapper for NicoNico services (Music Assistant fork)"
+authors = ["Shi-553 <58556078+Shi-553@users.noreply.github.com>", "Negima1072 <ngm1072@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 packages = [{include = "niconico"}]
-repository = "https://github.com/niconicolibs/niconico.py"
+repository = "https://github.com/Shi-553/niconico.py"
 
 [tool.poetry.scripts]
 niconico = "niconico.__main__:main"
