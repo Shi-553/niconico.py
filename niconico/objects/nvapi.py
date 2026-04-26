@@ -169,11 +169,11 @@ class AccessRightsData(BaseModel):
 class HistoryData(BaseModel):
     """A class that represents the data of a history response from the NvAPI.
 
-    ref: https://nvapi.nicovideo.jp/v1/users/me/watch/history
+    ref: https://nvapi.nicovideo.jp/v2/users/me/watch/history
     """
 
     items: list[HistoryItem]
-    total_count: int = Field(..., alias="totalCount")
+    next_cursor: str | None = Field(None, alias="nextCursor")
 
 
 class UserData(BaseModel):

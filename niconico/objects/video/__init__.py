@@ -165,10 +165,7 @@ class SeriesItem(BaseModel):
 class HistoryItem(BaseModel):
     """A class that represents a history item."""
 
-    frontend_id: int = Field(..., alias="frontendId")
+    item_id: str = Field(..., alias="itemId")
     is_maybe_like_user_item: bool = Field(..., alias="isMaybeLikeUserItem")
-    last_viewed_at: str = Field(..., alias="lastViewedAt")
-    playback_position: float = Field(..., alias="playbackPosition")
+    viewed_at: str = Field(..., alias="viewedAt")
     video: EssentialVideo
-    views: int
-    watch_id: str = Field(..., alias="watchId")

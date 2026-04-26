@@ -134,19 +134,19 @@ class VideoClient(BaseClient):
         return None
 
     @login_required()
-    def get_history(self, *, page_size: int = 100, page: int = 1) -> HistoryData | None:
+    def get_history(self, *, limit: int = 100, cursor: str | None = None) -> HistoryData | None:
         """Get the history of the authenticated user.
 
-        Args:
-            page_size (int): The number of videos to get per page.
-            page (int): The page number.
+        :param limit: The number of videos to get per page.
+        :param cursor: The cursor for pagination.
 
-        Returns:
-            HistoryData | None: The history data if successful, None otherwise.
+        :return: The history data if successful, None otherwise.
         """
-        query = {"pageSize": str(page_size), "page": str(page)}
+        query: dict[str, str] = {"limit": str(limit)}
+        if cursor is not None:
+            query["cursor"] = cursor
         query_str = "&".join([f"{key}={value}" for key, value in query.items()])
-        res = self.niconico.get(f"https://nvapi.nicovideo.jp/v1/users/me/watch/history?{query_str}")
+        res = self.niconico.get(f"https://nvapi.nicovideo.jp/v2/users/me/watch/history?{query_str}")
         if res.status_code == requests.codes.ok:
             res_cls = NvAPIResponse[HistoryData](**res.json())
             if res_cls.data is not None:
