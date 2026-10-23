@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 
 from niconico import NicoNico, __version__
-from niconico.exceptions import LoginFailureError, WatchAPIError
+from niconico.exceptions import LoginFailureError, NicoAPIError, WatchAPIError
 
 logger = logging.getLogger("niconico.py")
 
@@ -40,7 +40,7 @@ def command_quality(args: argparse.Namespace) -> None:
         logger.debug("is_premium: %s", client.premium)
     try:
         watch_data = client.video.watch.get_watch_data(args.id)
-    except WatchAPIError:
+    except (WatchAPIError, NicoAPIError):
         logger.exception("An error has occurred")
         return
     logger.debug("Watch data: %s", watch_data)
@@ -63,7 +63,7 @@ def command_download(args: argparse.Namespace) -> None:
         logger.debug("is_premium: %s", client.premium)
     try:
         watch_data = client.video.watch.get_watch_data(args.id)
-    except WatchAPIError:
+    except (WatchAPIError, NicoAPIError):
         logger.exception("An error has occurred")
         return
     logger.debug("Watch data: %s", watch_data)

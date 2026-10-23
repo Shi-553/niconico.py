@@ -507,7 +507,11 @@ class UserClient(BaseClient):
 
     def get_recommendations(
         self,
-        recipe_id: str = Literal["video_watch_recommendation", "video_recommendation_recommend" , "video_top_recommend"],
+        recipe_id: Literal[
+            "video_watch_recommendation",
+            "video_recommendation_recommend",
+            "video_top_recommend",
+        ] = "video_recommendation_recommend",
         *,
         video_id: str | None = None,
         site: str = "nicovideo",
@@ -519,7 +523,8 @@ class UserClient(BaseClient):
         """Get recommendations based on a specific video or general recommendations.
 
         Args:
-            recipe_id (str): The ID of the recommendation recipe.
+            recipe_id (str): The ID of the recommendation recipe. Defaults to "video_recommendation_recommend".
+                "video_watch_recommendation" requires `video_id`.
             video_id (str | None): The ID of the video to base the recommendations on.
             site (str): The site to get recommendations from. Defaults to "nicovideo".
             limit (int | None): The maximum number of recommendations to return.
@@ -574,7 +579,7 @@ class UserClient(BaseClient):
         base_url = "https://api.feed.nicovideo.jp/v1/activities/followings"
         url = f"{base_url}/{endpoint}"
 
-        query = {"context": context}
+        query: dict[str, str] = {"context": context}
         if cursor is not None:
             query["cursor"] = cursor
         query_str = "&".join([f"{key}={value}" for key, value in query.items()])
