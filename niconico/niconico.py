@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 import requests
 
 from niconico.channel import ChannelClient
-from niconico.exceptions import LoginFailureError
+from niconico.exceptions import LoginFailureError, NicoAPIError
 from niconico.user import UserClient
 from niconico.video import VideoClient
 
@@ -154,17 +154,33 @@ class NicoNico:
         """
         return self.session.cookies.get("user_session")
 
-    def logout(self) -> None:
+    def logout(self, *, revoke: bool = False) -> None:
         """Logout from NicoNico.
 
-        Properly logs out by calling logout endpoint and clearing session data.
-        Updates authentication state to reflect logged out status.
+        By default this only clears the local session state (the `user_session` cookie and the login flags);
+        the session itself stays valid on the server and can be used again with `login_with_session`.
+
+        Args:
+            revoke (bool): Also revoke the session on the server, as the web client's logout button does.
+                The session becomes unusable everywhere; NicoNico takes up to about two minutes to reject it.
+                Defaults to False.
+
+        Raises:
+            NicoAPIError: If revoking the session failed.
         """
-        if self.logined:
-            self.session.get("https://account.nicovideo.jp/logout")
-            self.session.cookies.clear("", "/", "user_session")
-            self.logined = False
-            self.premium = False
-            self.logger.debug("Logged out from NicoNico")
-        else:
+        if not self.logined:
             self.logger.warning("Not logged in, cannot logout")
+            return
+        if revoke:
+            res = self.delete(
+                "https://api.id.nicovideo.jp/v1/sessions/me",
+                headers={"Origin": "https://www.nicovideo.jp"},
+            )
+            # 401 means the server no longer knows the session, which is the state we want
+            if res.status_code not in (requests.codes.ok, requests.codes.unauthorized):
+                raise NicoAPIError(message=f"Failed to revoke the session: {res.status_code}")
+        for cookie in [c for c in self.session.cookies if c.name == "user_session"]:
+            self.session.cookies.clear(cookie.domain, cookie.path, cookie.name)
+        self.logined = False
+        self.premium = False
+        self.logger.debug("Logged out from NicoNico")
