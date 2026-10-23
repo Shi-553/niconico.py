@@ -25,7 +25,14 @@ from niconico.objects.video.watch import (
     WatchAPIErrorData,
     WatchAPIResponse,
     WatchData,
+    WatchLazyData,
 )
+
+# The watch API rejects requests whose nvpcClientVersion does not match the current web client.
+# The value comes from the web client's config module (`{watch: 1, shorts: 1}`).
+NVPC_CLIENT_VERSION = 1
+# Origin sent as X-Request-With, which the watch-related nvapi endpoints require.
+REQUEST_WITH_ORIGIN = "https://www.nicovideo.jp"
 
 
 class VideoWatchClient(BaseClient):
@@ -38,14 +45,48 @@ class VideoWatchClient(BaseClient):
             video_id: The ID of the video.
 
         Returns:
-            WatchData | WatchResponseError: The watch data of the video if successful, WatchResponseError
+            WatchData: The watch data of the video.
+
+        Raises:
+            WatchAPIError: If the video cannot be watched (deleted, not found, paid, ...).
+            NicoAPIError: If the API rejects the request itself (e.g. the nvpcClientVersion is outdated).
         """
-        res = self.niconico.get(f"https://www.nicovideo.jp/watch/{video_id}?responseType=json")
-        if res.status_code == requests.codes.ok:
-            res_cls_data = WatchAPIResponse[WatchAPIData](**res.json())
-            return res_cls_data.data.response
-        res_cls_error = WatchAPIResponse[WatchAPIErrorData](**res.json())
+        res = self.niconico.get(
+            f"https://www.nicovideo.jp/watch/{video_id}?responseType=json&nvpcClientVersion={NVPC_CLIENT_VERSION}",
+        )
+        res_json = res.json()
+        response = res_json["data"]["response"]
+        # An unwatchable video can come back with HTTP 200, so check the body instead of the status code
+        if "$watchV4" in response:
+            res_cls_data = WatchAPIResponse[WatchAPIData](**res_json)
+            return res_cls_data.data.response.watch_v4.data
+        if "errorCode" not in response:
+            raise NicoAPIError(message=str(response.get("reason", response)))
+        res_cls_error = WatchAPIResponse[WatchAPIErrorData](**res_json)
         raise WatchAPIError(response=res_cls_error.data.response)
+
+    def get_watch_lazy_data(self, watch_data: WatchData) -> WatchLazyData | None:
+        """Get the lazily loaded watch data of a video, such as its owner and series.
+
+        Args:
+            watch_data: The watch data of the video.
+
+        Returns:
+            WatchLazyData | None: The lazy watch data of the video if successful, None otherwise.
+        """
+        video_id = watch_data.client.watch_id
+        res = self.niconico.post(
+            f"https://nvapi.nicovideo.jp/v4/watch/lazy/{video_id}",
+            json={
+                "actionTrackId": watch_data.client.watch_track_id,
+                "keyToken": watch_data.lazy.auth_key,
+            },
+            headers={"X-Request-With": REQUEST_WITH_ORIGIN},
+        )
+        if res.status_code == requests.codes.ok:
+            res_cls = NvAPIResponse[WatchLazyData](**res.json())
+            return res_cls.data
+        return None
 
     def generate_action_track_id(self) -> str:
         """Generate a random action track ID.
@@ -71,13 +112,13 @@ class VideoWatchClient(BaseClient):
         outputs: dict[str, list[str]] = {}
         top_audio_id = None
         top_audio_quality = -1
-        for audio in watch_data.media.domand.audios:
+        for audio in watch_data.media.contents.audios:
             if audio.is_available and audio.quality_level > top_audio_quality:
                 top_audio_id = audio.id_
                 top_audio_quality = audio.quality_level
         if top_audio_id is None:
             return outputs
-        for video in watch_data.media.domand.videos:
+        for video in watch_data.media.contents.videos:
             if video.is_available:
                 outputs[video.label] = [top_audio_id] if audio_only else [video.id_, top_audio_id]
         return outputs
@@ -94,11 +135,11 @@ class VideoWatchClient(BaseClient):
         """
         video_id = watch_data.client.watch_id
         action_track_id = watch_data.client.watch_track_id
-        access_right_key = watch_data.media.domand.access_right_key
+        access_right_key = watch_data.media.access_right_key
         res = self.niconico.post(
             f"https://nvapi.nicovideo.jp/v1/watch/{video_id}/access-rights/hls?actionTrackId={action_track_id}",
             json={"outputs": outputs},
-            headers={"X-Access-Right-Key": access_right_key},
+            headers={"X-Access-Right-Key": access_right_key, "X-Request-With": REQUEST_WITH_ORIGIN},
         )
         if res.status_code == requests.codes.created:
             res_cls = NvAPIResponse[AccessRightsData](**res.json())
@@ -116,14 +157,14 @@ class VideoWatchClient(BaseClient):
         Returns:
             str | None: The storyboards URL of the video if successful, None otherwise.
         """
-        if not watch_data.media.domand.is_storyboard_available:
+        if not watch_data.media.is_storyboard_available:
             return None
         video_id = watch_data.client.watch_id
         action_track_id = watch_data.client.watch_track_id
-        access_right_key = watch_data.media.domand.access_right_key
+        access_right_key = watch_data.media.access_right_key
         res = self.niconico.post(
             f"https://nvapi.nicovideo.jp/v1/watch/{video_id}/access-rights/storyboard?actionTrackId={action_track_id}",
-            headers={"X-Access-Right-Key": access_right_key},
+            headers={"X-Access-Right-Key": access_right_key, "X-Request-With": REQUEST_WITH_ORIGIN},
         )
         if res.status_code == requests.codes.created:
             res_cls = NvAPIResponse[AccessRightsData](**res.json())
@@ -145,11 +186,12 @@ class VideoWatchClient(BaseClient):
         storyboard_url = self.get_storyboard_url(watch_data)
         if storyboard_url is None:
             raise NicoAPIError(message="Failed to get the storyboards URL.")
+        owner = watch_data.metadata.json_ld.owner
         output_path = output_path % {
             "id": watch_data.video.id_,
             "title": watch_data.video.title,
-            "owner": watch_data.owner.nickname if watch_data.owner else "Unknown",
-            "owner_id": str(watch_data.owner.id_) if watch_data.owner else "0",
+            "owner": owner.name if owner else "Unknown",
+            "owner_id": owner.id_ if owner else "0",
             "timestamp": str(int(time.time())),
         }
         res = self.niconico.get(storyboard_url)
@@ -199,11 +241,12 @@ class VideoWatchClient(BaseClient):
         hls_content_url = self.get_hls_content_url(watch_data, [outputs[output_label]])
         if hls_content_url is None:
             raise NicoAPIError(message="Failed to get the HLS content URL.")
+        owner = watch_data.metadata.json_ld.owner
         output_path = output_path % {
             "id": watch_data.video.id_,
             "title": watch_data.video.title,
-            "owner": watch_data.owner.nickname if watch_data.owner else "Unknown",
-            "owner_id": str(watch_data.owner.id_) if watch_data.owner else "0",
+            "owner": owner.name if owner else "Unknown",
+            "owner_id": owner.id_ if owner else "0",
             "timestamp": str(int(time.time())),
             "ext": "m4a" if audio_only else "mp4",
         }
@@ -267,11 +310,12 @@ class VideoWatchClient(BaseClient):
         hls_content_url = self.get_hls_content_url(watch_data, [outputs[output_label]])
         if hls_content_url is None:
             raise NicoAPIError(message="Failed to get the HLS content URL.")
+        owner = watch_data.metadata.json_ld.owner
         output_path = output_path % {
             "id": watch_data.video.id_,
             "title": watch_data.video.title,
-            "owner": watch_data.owner.nickname if watch_data.owner else "Unknown",
-            "owner_id": str(watch_data.owner.id_) if watch_data.owner else "0",
+            "owner": owner.name if owner else "Unknown",
+            "owner_id": owner.id_ if owner else "0",
             "timestamp": str(int(time.time())),
             "ext": "m4a" if audio_only else "mp4",
         }
