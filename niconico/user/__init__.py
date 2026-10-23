@@ -415,6 +415,19 @@ class UserClient(BaseClient):
         return None
 
     @login_required()
+    def delete_mylist(self, mylist_id: str) -> bool:
+        """Delete a mylist.
+
+        Args:
+            mylist_id (str): The ID of the mylist to delete.
+
+        Returns:
+            bool: True if the mylist was successfully deleted, False otherwise.
+        """
+        res = self.niconico.delete(f"https://nvapi.nicovideo.jp/v1/users/me/mylists/{mylist_id}")
+        return res.status_code == requests.codes.ok
+
+    @login_required()
     def get_own_series_detail(self, series_id: str, *, page_size: int = 100, page: int = 1) -> SeriesData | None:
         """Get a own series by its ID.
 
@@ -428,9 +441,13 @@ class UserClient(BaseClient):
         """
         query = {"pageSize": str(page_size), "page": str(page)}
         query_str = "&".join([f"{key}={value}" for key, value in query.items()])
-        res = self.niconico.get(f"https://nvapi.nicovideo.jp/v1/users/me/series/{series_id}?{query_str}")
+        res = self.niconico.get(f"https://nvapi.nicovideo.jp/v2/users/me/series/{series_id}?{query_str}")
         if res.status_code == requests.codes.ok:
-            res_cls = NvAPIResponse[SeriesData](**res.json())
+            res_json = res.json()
+            # v2 wraps each video as an own-video item; unwrap it to keep returning SeriesData
+            for item in (res_json.get("data") or {}).get("items", []):
+                item["video"] = item["video"]["essential"]
+            res_cls = NvAPIResponse[SeriesData](**res_json)
             if res_cls.data is not None:
                 return res_cls.data
         return None
