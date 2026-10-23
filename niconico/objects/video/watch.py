@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Literal, TypeVar
 
 from pydantic import BaseModel, Field
 
@@ -41,47 +41,6 @@ class WatchPageMetadata(BaseModel):
     json_lds: Any = Field(..., alias="jsonLds")
 
 
-class WatchChannelThumbnail(BaseModel):
-    """Data model of the thumbnail of a watch channel."""
-
-    url: str
-    small_url: str | None = Field(..., alias="smallUrl")
-
-
-class WatchChannelViewerFollow(BaseModel):
-    """Data model of the viewer follow status of a watch channel."""
-
-    is_followed: bool = Field(..., alias="isFollowed")
-    is_bookmarked: bool = Field(..., alias="isBookmarked")
-    token: str
-    token_timestamp: int = Field(..., alias="tokenTimestamp")
-
-
-class WatchChannelViewer(BaseModel):
-    """Data model of the viewer of a watch channel."""
-
-    follow: WatchChannelViewerFollow
-
-
-class WatchChannel(BaseModel):
-    """Data model of a watch channel."""
-
-    id_: str = Field(..., alias="id")
-    name: str
-    is_official_anime: bool = Field(..., alias="isOfficialAnime")
-    is_display_ad_banner: bool = Field(..., alias="isDisplayAdBanner")
-    thumbnail: WatchChannelThumbnail
-    viewer: WatchChannelViewer
-
-
-class WatchOwnerChannel(BaseModel):
-    """Data model of a watch owner channel."""
-
-    id_: str = Field(..., alias="id")
-    name: str
-    url: str
-
-
 class WatchClient(BaseModel):
     """Data model of the client of the watch API response."""
 
@@ -90,10 +49,10 @@ class WatchClient(BaseModel):
     watch_track_id: str = Field(..., alias="watchTrackId")
 
 
-class CommentThreadId(BaseModel):
-    """Data model of a comment thread ID."""
+class CommentLayerComponent(BaseModel):
+    """Data model of a component of a comment layer."""
 
-    id_: int = Field(..., alias="id")
+    thread_id: int = Field(..., alias="threadId")
     fork: int
     fork_label: str = Field(..., alias="forkLabel")
 
@@ -103,7 +62,7 @@ class CommentLayer(BaseModel):
 
     index: int
     is_translucent: bool = Field(..., alias="isTranslucent")
-    thread_ids: list[CommentThreadId] = Field(..., alias="threadIds")
+    components: list[CommentLayerComponent]
 
 
 class CommentThread(BaseModel):
@@ -113,28 +72,22 @@ class CommentThread(BaseModel):
     fork: int
     fork_label: str = Field(..., alias="forkLabel")
     video_id: str = Field(..., alias="videoId")
-    is_active: bool = Field(..., alias="isActive")
-    is_default_post_target: bool = Field(..., alias="isDefaultPostTarget")
-    is_easy_comment_post_target: bool = Field(..., alias="isEasyCommentPostTarget")
-    is_leaf_required: bool = Field(..., alias="isLeafRequired")
+    is_post_target: bool = Field(..., alias="isPostTarget")
     is_owner_thread: bool = Field(..., alias="isOwnerThread")
-    is_threadkey_required: bool = Field(..., alias="isThreadkeyRequired")
-    threadkey: str | None = Field(..., alias="threadkey")
     is_184_forced: bool = Field(..., alias="is184Forced")
-    has_nicoscript: bool = Field(..., alias="hasNicoscript")
     label: str
-    postkey_status: int = Field(..., alias="postkeyStatus")
-    server: str
+    post_ng_reason: str | None = Field(..., alias="postNgReason")
+    sync_buffer_time: int = Field(..., alias="syncBufferTime")
 
 
 class CommentNgScore(BaseModel):
-    """Data model of the score of a comment NG."""
+    """Data model of the NG score of a comment."""
 
     is_disabled: bool = Field(..., alias="isDisabled")
 
 
 class CommentNgViewerItem(BaseModel):
-    """Data model of an item of a comment NG viewer."""
+    """Data model of an NG viewer item."""
 
     type_: str = Field(..., alias="type")
     source: str
@@ -142,7 +95,7 @@ class CommentNgViewerItem(BaseModel):
 
 
 class CommentNgViewer(BaseModel):
-    """Data model of a comment NG viewer."""
+    """Data model of an NG viewer."""
 
     revision: int
     count: int
@@ -150,70 +103,60 @@ class CommentNgViewer(BaseModel):
 
 
 class CommentNg(BaseModel):
-    """Data model of a comment NG."""
+    """Data model of the NG settings of comments."""
 
     ng_score: CommentNgScore = Field(..., alias="ngScore")
-    channel: list
     owner: list
     viewer: CommentNgViewer | None
 
 
 class NvCommentDataTarget(BaseModel):
-    """Data model of a target of an NV comment data."""
+    """Data model of a target of the NV comment data."""
 
     id_: str = Field(..., alias="id")
     fork: str
 
 
 class NvCommentDataParams(BaseModel):
-    """Data model of the parameters of an NV comment data."""
+    """Data model of the parameters of the NV comment data."""
 
     targets: list[NvCommentDataTarget]
     language: str
 
 
 class NvCommentData(BaseModel):
-    """Data model of an NV comment data."""
+    """Data model of the NV comment data."""
 
-    thread_key: str = Field(..., alias="threadKey")
+    thread_key: str | None = Field(..., alias="threadKey")
     server: str
     params: NvCommentDataParams
 
 
-class WatchComment(BaseModel):
-    """Data model of the comment of the watch API response."""
+class CommentAssist(BaseModel):
+    """Data model of the comment assist settings."""
 
-    layers: list[CommentLayer]
+    section_duration_sec: int = Field(..., alias="sectionDurationSec")
+    min_match_characters: int = Field(..., alias="minMatchCharacters")
+    ignore_post_elapsed_time_sec: int = Field(..., alias="ignorePostElapsedTimeSec")
+    ignore_comment_ng_score_threshold: int = Field(..., alias="ignoreCommentNgScoreThreshold")
+    comment_count_threshold_list: list[list[Any]] = Field(..., alias="commentCountThresholdList")
+    button_display_duration_sec: int = Field(..., alias="buttonDisplayDurationSec")
+    button_display_offset_sec: int = Field(..., alias="buttonDisplayOffsetSec")
+
+
+class WatchComment(BaseModel):
+    """Data model of the comment settings of the watch API response."""
+
     threads: list[CommentThread]
+    layers: list[CommentLayer]
     ng: CommentNg
     is_attention_required: bool = Field(..., alias="isAttentionRequired")
     nv_comment: NvCommentData = Field(..., alias="nvComment")
-
-
-class EasyCommentNicodic(BaseModel):
-    """Data model of a Nicodic of an easy comment."""
-
-    title: str
-    view_title: str = Field(..., alias="viewTitle")
-    summary: str
-    link: str
-
-
-class EasyCommentPhrase(BaseModel):
-    """Data model of a phrase of an easy comment."""
-
-    text: str
-    nicodic: EasyCommentNicodic | None
-
-
-class WatchEasyComment(BaseModel):
-    """Data model of an easy comment of the watch API response."""
-
-    phrases: list[EasyCommentPhrase]
+    assist: CommentAssist
 
 
 class WatchGenre(BaseModel):
-    """Data model of a genre of the watch API response."""
+    """Data model of the genre of the watch API response."""
 
     key: str
     label: str
@@ -222,225 +165,196 @@ class WatchGenre(BaseModel):
     is_not_set: bool = Field(..., alias="isNotSet")
 
 
-class WatchMediaDomandVideo(BaseModel):
-    """Data model of a video of a watch media DOMAND."""
+class WatchLazy(BaseModel):
+    """Data model of the key used to fetch the lazy watch data."""
+
+    auth_key: str = Field(..., alias="authKey")
+
+
+class WatchMediaVideo(BaseModel):
+    """Data model of a video stream of the watch API response."""
 
     id_: str = Field(..., alias="id")
     is_available: bool = Field(..., alias="isAvailable")
+    quality_level: int = Field(..., alias="qualityLevel")
     label: str
     bit_rate: int = Field(..., alias="bitRate")
     width: int
     height: int
-    quality_level: int = Field(..., alias="qualityLevel")
-    recommended_highest_audio_quality_level: int = Field(..., alias="recommendedHighestAudioQualityLevel")
 
 
 class AudioLoudness(BaseModel):
-    """Data model of the loudness of an audio."""
+    """Data model of the loudness of an audio stream."""
 
     type_: str = Field(..., alias="type")
     value: float
 
 
-class WatchMediaDomandAudio(BaseModel):
-    """Data model of an audio of a watch media DOMAND."""
+class WatchMediaAudioLabel(BaseModel):
+    """Data model of the label of an audio stream."""
+
+    quality: str
+    bitrate: str
+
+
+class WatchMediaAudio(BaseModel):
+    """Data model of an audio stream of the watch API response."""
 
     id_: str = Field(..., alias="id")
     is_available: bool = Field(..., alias="isAvailable")
+    quality_level: int = Field(..., alias="qualityLevel")
     bit_rate: int = Field(..., alias="bitRate")
     sampling_rate: int = Field(..., alias="samplingRate")
     integrated_loudness: float = Field(..., alias="integratedLoudness")
     true_peak: float = Field(..., alias="truePeak")
-    quality_level: int = Field(..., alias="qualityLevel")
     loudness_collection: list[AudioLoudness] = Field(..., alias="loudnessCollection")
+    label: WatchMediaAudioLabel
 
 
-class WatchMediaDomand(BaseModel):
-    """Data model of a watch media DOMAND."""
+class WatchMediaContents(BaseModel):
+    """Data model of the available streams of the watch API response."""
 
-    videos: list[WatchMediaDomandVideo]
-    audios: list[WatchMediaDomandAudio]
-    is_storyboard_available: bool = Field(..., alias="isStoryboardAvailable")
-    access_right_key: str = Field(..., alias="accessRightKey")
+    videos: list[WatchMediaVideo]
+    audios: list[WatchMediaAudio]
+
+
+class WatchMediaHlsOutput(BaseModel):
+    """Data model of an output of a pre-issued HLS playlist."""
+
+    asset_unit_names: list[str] = Field(..., alias="assetUnitNames")
+
+
+class WatchMediaHls(BaseModel):
+    """Data model of a pre-issued HLS playlist."""
+
+    url: str
+    outputs: list[WatchMediaHlsOutput]
+    created_at: str = Field(..., alias="createdAt")
+    expired_at: str = Field(..., alias="expiredAt")
+
+
+class WatchMediaLowDataMode(BaseModel):
+    """Data model of the low data mode limits."""
+
+    video_upper_limit: int = Field(..., alias="videoUpperLimit")
+    audio_upper_limit: int = Field(..., alias="audioUpperLimit")
 
 
 class WatchMedia(BaseModel):
     """Data model of the media of the watch API response."""
 
-    domand: WatchMediaDomand
-    delivery: None
-    delivery_legacy: None = Field(..., alias="deliveryLegacy")
+    contents: WatchMediaContents
+    is_storyboard_available: bool = Field(..., alias="isStoryboardAvailable")
+    access_right_key: str = Field(..., alias="accessRightKey")
+    hls: WatchMediaHls | None
+    low_data_mode: WatchMediaLowDataMode = Field(..., alias="lowDataMode")
 
 
-class WatchOwnerViewer(BaseModel):
-    """Data model of a viewer of a watch owner."""
-
-    is_following: bool = Field(..., alias="isFollowing")
-
-
-class WatchOwnerLive(BaseModel):
-    """Data model of a live stream of a watch owner."""
+class WatchJsonLdOwner(BaseModel):
+    """Data model of the owner in the JSON-LD metadata."""
 
     id_: str = Field(..., alias="id")
-    title: str
-    url: str
-    begun_at: str = Field(..., alias="begunAt")
-    is_video_live: bool = Field(..., alias="isVideoLive")
-    video_live_on_air_start_time: str | None = Field(..., alias="videoLiveOnAirStartTime")
-    thumbnail_url: str = Field(..., alias="thumbnailUrl")
-    flip_thumbnail_url: str | None = Field(..., alias="flipThumbnailUrl")
-
-
-class WatchOwner(BaseModel):
-    """Data model of a watch owner."""
-
-    id_: int = Field(..., alias="id")
-    nickname: str
+    type_: str = Field(..., alias="type")
+    name: str
+    description: str
     icon_url: str = Field(..., alias="iconUrl")
-    channel: WatchOwnerChannel | None
-    live: WatchOwnerLive | None
-    is_videos_public: bool = Field(..., alias="isVideosPublic")
-    is_mylists_public: bool = Field(..., alias="isMylistsPublic")
-    video_live_notice: None = Field(..., alias="videoLiveNotice")
-    viewer: WatchOwnerViewer | None
 
 
-class WatchPaymentVideo(BaseModel):
-    """Data model of a video of a watch payment."""
+class WatchJsonLdVideoObject(BaseModel):
+    """Data model of the video object in the JSON-LD metadata."""
 
-    is_ppv: bool = Field(..., alias="isPpv")
-    is_admission: bool = Field(..., alias="isAdmission")
-    is_continuation_benefit: bool = Field(..., alias="isContinuationBenefit")
-    is_premium: bool = Field(..., alias="isPremium")
-    watchable_user_type: str = Field(..., alias="watchableUserType")
-    commentable_user_type: str = Field(..., alias="commentableUserType")
-    billing_type: str = Field(..., alias="billingType")
+    regions_allowed: Any = Field(..., alias="regionsAllowed")
+    expires_at: str | None = Field(..., alias="expiresAt")
 
 
-class WatchPaymentPreviewCheck(BaseModel):
-    """Data model of a check of a watch payment preview."""
+class WatchJsonLd(BaseModel):
+    """Data model of the JSON-LD metadata."""
+
+    owner: WatchJsonLdOwner | None
+    video_object: WatchJsonLdVideoObject = Field(..., alias="videoObject")
+
+
+class WatchMetadata(BaseModel):
+    """Data model of the metadata of the watch API response."""
+
+    json_ld: WatchJsonLd = Field(..., alias="jsonLd")
+    gtm: Any
+
+
+class WatchPaymentCheck(BaseModel):
+    """Data model of a payment option of a video."""
 
     is_enabled: bool = Field(..., alias="isEnabled")
-
-
-class WatchPaymentPreview(BaseModel):
-    """Data model of a preview of a watch payment."""
-
-    ppv: WatchPaymentPreviewCheck
-    admission: WatchPaymentPreviewCheck
-    continuation_benefit: WatchPaymentPreviewCheck = Field(..., alias="continuationBenefit")
-    premium: WatchPaymentPreviewCheck
+    show_promotion: bool = Field(..., alias="showPromotion")
 
 
 class WatchPayment(BaseModel):
-    """Data model of a payment of the watch API response."""
+    """Data model of the payment settings of the watch API response."""
 
-    video: WatchPaymentVideo
-    preview: WatchPaymentPreview
+    watchable_user_type: str = Field(..., alias="watchableUserType")
+    commentable_user_type: str = Field(..., alias="commentableUserType")
+    billing_type: str = Field(..., alias="billingType")
+    ppv: WatchPaymentCheck
+    admission: WatchPaymentCheck
+    continuation_benefit: WatchPaymentCheck = Field(..., alias="continuationBenefit")
+    premium: WatchPaymentCheck
 
 
 class PlayerInitialPlayback(BaseModel):
-    """Data model of the initial playback of a player."""
+    """Data model of the initial playback settings."""
 
     type_: str = Field(..., alias="type")
     position_sec: float | None = Field(None, alias="positionSec")
 
 
 class WatchPlayerComment(BaseModel):
-    """Data model of a comment of a watch player."""
+    """Data model of the comment settings of the player."""
 
     is_default_invisible: bool = Field(..., alias="isDefaultInvisible")
 
 
 class WatchPlayer(BaseModel):
-    """Data model of a player of the watch API response."""
+    """Data model of the player settings of the watch API response."""
 
-    initial_playback: PlayerInitialPlayback | None = Field(..., alias="initialPlayback")
     comment: WatchPlayerComment
+    initial_playback: PlayerInitialPlayback | None = Field(..., alias="initialPlayback")
     layer_mode: int = Field(..., alias="layerMode")
 
 
-class RankingGenre(BaseModel):
-    """Data model of a genre of a ranking."""
-
-    rank: int
-    genre: str
-    date_time: str = Field(..., alias="dateTime")
-
-
-class RankingTag(BaseModel):
-    """Data model of a tag of a ranking."""
-
-    tag: str
-    regularized_tag: str = Field(..., alias="regularizedTag")
-    rank: int
-    genre: str
-    date_time: str = Field(..., alias="dateTime")
-
-
-class WatchRanking(BaseModel):
-    """Data model of a ranking of the watch API response."""
-
-    genre: RankingGenre | None
-    popular_tag: list[RankingTag] = Field(..., alias="popularTag")
-
-
-class WatchSeriesVideos(BaseModel):
-    """Data model of the videos of a watch series."""
-
-    prev: EssentialVideo | None
-    next_: EssentialVideo | None = Field(..., alias="next")
-    first: EssentialVideo | None
-
-
-class WatchSeries(BaseModel):
-    """Data model of a series of the watch API response."""
-
-    id_: int = Field(..., alias="id")
-    title: str
-    description: str
-    thumbnail_url: str = Field(..., alias="thumbnailUrl")
-    video: WatchSeriesVideos
-
-
 class WatchSystem(BaseModel):
-    """Data model of the system of the watch API response."""
+    """Data model of the system information of the watch API response."""
 
     server_time: str = Field(..., alias="serverTime")
-    is_peak_time: bool = Field(..., alias="isPeakTime")
     is_stella_alive: bool = Field(..., alias="isStellaAlive")
+    channel_gtm_container_id: str | None = Field(..., alias="channelGtmContainerId")
 
 
 class WatchTagItem(BaseModel):
-    """Data model of a tag item."""
+    """Data model of a tag of the watch API response."""
 
     name: str
-    is_category: bool = Field(..., alias="isCategory")
-    is_category_candidate: bool = Field(..., alias="isCategoryCandidate")
-    is_nicodic_article_exists: bool = Field(..., alias="isNicodicArticleExists")
     is_locked: bool = Field(..., alias="isLocked")
 
 
 class WatchTagEdit(BaseModel):
-    """Data model of an edit of a watch tag."""
+    """Data model of the tag edit settings."""
 
     is_editable: bool = Field(..., alias="isEditable")
     uneditable_reason: str | None = Field(..., alias="uneditableReason")
     edit_key: str | None = Field(..., alias="editKey")
 
 
-class WatchTag(BaseModel):
-    """Data model of a tag of the watch API response."""
+class WatchTags(BaseModel):
+    """Data model of the tags of the watch API response."""
 
     items: list[WatchTagItem]
     has_r18_tag: bool = Field(..., alias="hasR18Tag")
     is_published_nicoscript: bool = Field(..., alias="isPublishedNicoscript")
     edit: WatchTagEdit
-    viewer: WatchTagEdit | None
 
 
 class WatchVideoCount(BaseModel):
-    """Data model of the count of a watch video."""
+    """Data model of the counters of a video."""
 
     view: int
     comment: int
@@ -449,73 +363,62 @@ class WatchVideoCount(BaseModel):
 
 
 class WatchVideoThumbnail(BaseModel):
-    """Data model of a thumbnail of a watch video."""
+    """Data model of the thumbnails of a video."""
 
-    url: str
-    middle_url: str | None = Field(..., alias="middleUrl")
-    large_url: str | None = Field(..., alias="largeUrl")
+    normal: str
+    middle: str | None
+    large: str | None
     player: str
     ogp: str
+    short: str | None
 
 
 class WatchVideoRating(BaseModel):
-    """Data model of the rating of a watch video."""
+    """Data model of the rating of a video."""
 
     is_adult: bool = Field(..., alias="isAdult")
 
 
-class WatchVideoViewerLike(BaseModel):
-    """Data model of the like status of a viewer of a watch video."""
+class WatchVideoPermission(BaseModel):
+    """Data model of the permissions of a video."""
 
-    is_liked: bool = Field(..., alias="isLiked")
-    count: int | None
-
-
-class WatchVideoViewer(BaseModel):
-    """Data model of a viewer of a watch video."""
-
-    is_owner: bool = Field(..., alias="isOwner")
-    like: WatchVideoViewerLike
-
-
-class WatchVideo(BaseModel):
-    """Data model of a video of the watch API response."""
-
-    id_: str = Field(..., alias="id")
-    title: str
-    description: str
-    count: WatchVideoCount
-    duration: int
-    thumbnail: WatchVideoThumbnail
-    rating: WatchVideoRating
-    registered_at: str = Field(..., alias="registeredAt")
     is_private: bool = Field(..., alias="isPrivate")
     is_deleted: bool = Field(..., alias="isDeleted")
-    is_no_banner: bool = Field(..., alias="isNoBanner")
     is_authentication_required: bool = Field(..., alias="isAuthenticationRequired")
     is_embed_player_allowed: bool = Field(..., alias="isEmbedPlayerAllowed")
     is_gift_allowed: bool = Field(..., alias="isGiftAllowed")
-    viewer: WatchVideoViewer | None
-    watchable_user_type_for_payment: str = Field(..., alias="watchableUserTypeForPayment")
-    commentable_user_type_for_payment: str = Field(..., alias="commentableUserTypeForPayment")
+    is_ng_for_vocacolle_app: bool = Field(..., alias="isNgForVocacolleApp")
+    rating: WatchVideoRating
 
 
-class WatchViewerExistence(BaseModel):
-    """Data model of the existence of a watch viewer."""
+class WatchVideo(BaseModel):
+    """Data model of the video of the watch API response."""
 
-    age: int
-    prefecture: str | None = None
-    sex: str
+    id_: str = Field(..., alias="id")
+    content_type: str = Field(..., alias="contentType")
+    title: str
+    description: str
+    supplements: list[Any]
+    count: WatchVideoCount
+    duration: int
+    thumbnail: WatchVideoThumbnail
+    registered_at: str = Field(..., alias="registeredAt")
+    permission: WatchVideoPermission
+    has_lyrics: bool = Field(..., alias="hasLyrics")
+    is_high_risk_video: bool = Field(..., alias="isHighRiskVideo")
+    is_channel_video: bool = Field(..., alias="isChannelVideo")
+    is_owned_by_viewer: bool = Field(..., alias="isOwnedByViewer")
+    show_owner_menu: bool = Field(..., alias="showOwnerMenu")
+    is_liked_by_viewer: bool = Field(..., alias="isLikedByViewer")
 
 
 class WatchViewer(BaseModel):
-    """Data model of a viewer of the watch API response."""
+    """Data model of the viewer of the watch API response."""
 
     id_: int = Field(..., alias="id")
     nickname: str
     is_premium: bool = Field(..., alias="isPremium")
     allow_sensitive_contents: bool = Field(..., alias="allowSensitiveContents")
-    existence: WatchViewerExistence
 
 
 class WatchVideoLive(BaseModel):
@@ -527,48 +430,52 @@ class WatchVideoLive(BaseModel):
 
 
 class WatchData(BaseModel):
-    """Data model of the data of the watch API response."""
+    """Data model of the data of the watch API response.
 
-    ads: None
-    category: None
-    channel: WatchChannel | None
+    Owner, series and channel information is not included; get it with `VideoWatchClient.get_watch_lazy_data`.
+    """
+
+    response_type: str = Field(..., alias="responseType")
     client: WatchClient
     comment: WatchComment
-    community: None
-    easy_comment: WatchEasyComment = Field(..., alias="easyComment")
-    external: Any
-    genre: WatchGenre
-    marquee: Any
     media: WatchMedia
-    ok_reason: str = Field(..., alias="okReason")
-    owner: WatchOwner | None
-    payment: WatchPayment
-    pc_watch_page: Any = Field(..., alias="pcWatchPage")
     player: WatchPlayer
-    ppv: None
-    ranking: WatchRanking
-    series: WatchSeries | None
-    smartphone: None
-    system: WatchSystem
-    tag: WatchTag
     video: WatchVideo
+    genre: WatchGenre
+    tags: WatchTags
+    lazy: WatchLazy
+    system: WatchSystem
+    viewer: WatchViewer | None
     video_ads: Any = Field(..., alias="videoAds")
     video_live: WatchVideoLive | None = Field(..., alias="videoLive")
-    viewer: WatchViewer | None
-    waku: Any
+    payment: WatchPayment
+    base_video: Any = Field(..., alias="baseVideo")
+    metadata: WatchMetadata
+    ok_reason: str = Field(..., alias="okReason")
 
 
 class WatchResponseError(BaseModel):
     """Data model of the error response of the watch API."""
 
-    is_custom_error: bool = Field(..., alias="isCustomError")
     status_code: int = Field(..., alias="statusCode")
     error_code: str = Field(..., alias="errorCode")
     reason_code: str | None = Field(..., alias="reasonCode")
     deleted_message: str | None = Field(..., alias="deletedMessage")
-    community_link: str | None = Field(..., alias="communityLink")
     publish_scheduled_at: str | None = Field(..., alias="publishScheduledAt")
-    data: None
+    data_set: Any = Field(..., alias="dataSet")
+
+
+class WatchV4Data(BaseModel):
+    """Data model of the watch v4 wrapper of the watch API response."""
+
+    data: WatchData
+
+
+class WatchResponse(BaseModel):
+    """Data model of the response of the watch API response."""
+
+    watch_v4: WatchV4Data = Field(..., alias="$watchV4")
+    pcweb: Any
 
 
 class WatchAPIData(BaseModel):
@@ -576,7 +483,7 @@ class WatchAPIData(BaseModel):
 
     metadata: WatchPageMetadata
     google_tag_manager: Any | None = Field(..., alias="googleTagManager")
-    response: WatchData
+    response: WatchResponse
 
 
 class WatchAPIErrorData(BaseModel):
@@ -592,11 +499,100 @@ T = TypeVar("T")
 class WatchAPIResponse(BaseModel, Generic[T]):
     """Data model of the watch API response.
 
-    ref: https://www.nicovideo.jp/watch/<video_id>?responseType=json
+    ref: https://www.nicovideo.jp/watch/<video_id>?responseType=json&nvpcClientVersion=1
     """
 
     meta: WatchAPIMeta
     data: T
+
+
+class WatchLazyUserOwnerIcon(BaseModel):
+    """Data model of the icon of a user owner."""
+
+    url: str
+
+
+class WatchLazyUserOwnerFollow(BaseModel):
+    """Data model of the viewer's follow state of a user owner."""
+
+    is_followed: bool = Field(..., alias="isFollowed")
+
+
+class WatchLazyUserOwner(BaseModel):
+    """Data model of a user owner of the lazy watch API response."""
+
+    type_: Literal["user"] = Field(..., alias="type")
+    visibility: Literal["visible"]
+    id_: int = Field(..., alias="id")
+    nickname: str
+    icon: WatchLazyUserOwnerIcon
+    follow: WatchLazyUserOwnerFollow | None
+    owned_channel: Any = Field(..., alias="ownedChannel")
+    current_live: Any = Field(..., alias="currentLive")
+    upcoming_video_live: Any = Field(..., alias="upcomingVideoLive")
+
+
+class WatchLazyChannelOwnerThumbnail(BaseModel):
+    """Data model of the thumbnail of a channel owner."""
+
+    url: str
+    small_url: str | None = Field(..., alias="smallUrl")
+
+
+class WatchLazyChannelOwnerFollow(BaseModel):
+    """Data model of the viewer's follow state of a channel owner."""
+
+    is_subscribed: bool = Field(..., alias="isSubscribed")
+    is_bookmarked: bool = Field(..., alias="isBookmarked")
+    token: str
+    token_timestamp: int = Field(..., alias="tokenTimestamp")
+
+
+class WatchLazyChannelOwner(BaseModel):
+    """Data model of a channel owner of the lazy watch API response."""
+
+    type_: Literal["channel"] = Field(..., alias="type")
+    visibility: Literal["visible"]
+    id_: str = Field(..., alias="id")
+    name: str
+    is_official_anime: bool = Field(..., alias="isOfficialAnime")
+    is_display_ad_banner: bool = Field(..., alias="isDisplayAdBanner")
+    thumbnail: WatchLazyChannelOwnerThumbnail
+    follow: WatchLazyChannelOwnerFollow | None
+
+
+class WatchLazyHiddenOwner(BaseModel):
+    """Data model of a hidden owner of the lazy watch API response."""
+
+    type_: str = Field(..., alias="type")
+    visibility: Literal["hidden"]
+
+
+class WatchSeriesVideos(BaseModel):
+    """Data model of the neighboring videos of a series."""
+
+    prev: EssentialVideo | None
+    next_: EssentialVideo | None = Field(..., alias="next")
+    first: EssentialVideo | None
+
+
+class WatchSeries(BaseModel):
+    """Data model of a series of the lazy watch API response."""
+
+    id_: int = Field(..., alias="id")
+    title: str
+    description: str
+    thumbnail_url: str = Field(..., alias="thumbnailUrl")
+    video: WatchSeriesVideos
+
+
+class WatchLazyData(BaseModel):
+    """Data model of the data of the lazy watch API response."""
+
+    owner: WatchLazyUserOwner | WatchLazyChannelOwner | WatchLazyHiddenOwner | None
+    ranking: Any
+    series: WatchSeries | None
+    waku: Any
 
 
 class StoryboardImage(BaseModel):
