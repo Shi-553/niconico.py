@@ -54,8 +54,12 @@ class VideoWatchClient(BaseClient):
         res = self.niconico.get(
             f"https://www.nicovideo.jp/watch/{video_id}?responseType=json&nvpcClientVersion={NVPC_CLIENT_VERSION}",
         )
-        res_json = res.json()
-        response = res_json["data"]["response"]
+        try:
+            res_json = res.json()
+            response = res_json["data"]["response"]
+        except (ValueError, KeyError, TypeError) as e:
+            # e.g. an HTML maintenance page
+            raise NicoAPIError(message=f"Unexpected watch API response: {res.status_code}") from e
         # An unwatchable video can come back with HTTP 200, so check the body instead of the status code
         if "$watchV4" in response:
             res_cls_data = WatchAPIResponse[WatchAPIData](**res_json)
